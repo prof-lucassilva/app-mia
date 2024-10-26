@@ -22,6 +22,9 @@ const Data: React.FC = () => {
           <motion.div
             key={index}
             className="bg-white shadow-md rounded-lg p-5 m-2 text-center transition-transform transform hover:scale-105 flex-1 max-w-xs"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.2 }}
           >
             <img 
               src={card.image} 
