@@ -1,0 +1,31 @@
+/* src/index.css */
+
+body {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+h1 {
+  font-size: 4rem;
+  font-weight: 700;
+  font-family: 'Josefin Sans', sans-serif;
+  color: #d8d8d8;
+  text-align: center;
+  text-shadow: 0 0 10px #7e1bdb, 0 0 20px #7e1bdb, 0 0 30px #7e1bdb;
+  margin: 0; /* Remove o espaçamento padrão */
+  line-height: 1.1; /* Ajusta a altura da linha para aproximar os textos */
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 300;
+  font-family: 'Montserrat', sans-serif;
+  color: #d8d8d8;
+  text-align: center;
+  margin-top: 0.5rem; /* Espaçamento menor para aproximar o subtítulo */
+}

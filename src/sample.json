@@ -1,0 +1,16 @@
+{
+    "heart": {
+        "bpm": 72.4,
+        "sig": 453
+    },
+    "arms": {
+        "left": {
+            "flex": 543,
+            "muscle": 345
+        },
+        "right": {
+            "flex": 543,
+            "muscle": 345
+        }
+    }
+}
