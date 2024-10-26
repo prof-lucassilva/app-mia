@@ -5,82 +5,33 @@ import heartImage from '../assets/frequencia-cardiaca.png';
 import flexaoImage from '../assets/flexao.png';
 import contracaoImage from '../assets/contracao.png';
 
-const cardStyle = {
-  backgroundColor: 'white',
-  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-  borderRadius: '8px',
-  padding: '20px',
-  margin: '10px',
-  textAlign: 'center' as const,
-  transition: 'transform 0.5s',
-  flex: '1 1 calc(100% - 20px)', // Full width on mobile
-  maxWidth: '300px', // Limit width on larger screens
-};
-
-const containerStyle = {
-  display: 'flex',
-  flexDirection: 'column' as const,
-  alignItems: 'center' as const,
-  justifyContent: 'flex-start' as const, // Start from the top
-  minHeight: '100vh',
-  backgroundColor: '#9f7aea',
-  padding: '20px',
-  overflowY: 'auto' as const,
-};
-
-const gridStyle = {
-  display: 'flex',
-  flexWrap: 'wrap' as const,
-  justifyContent: 'center' as const,
-  width: '100%',
-  maxWidth: '1200px', // Limit grid width on larger screens
-};
-
 const Data: React.FC = () => {
   return (
-    <div style={containerStyle}>
-      <h1 style={{ color: 'white', marginBottom: '20px', textAlign: 'center' }}>Informações de Saúde</h1>
-      <div style={gridStyle}>
-        <motion.div
-          style={cardStyle}
-          whileHover={{ scale: 1.05 }}
-        >
-          <img src={heartImage} alt="Frequência Cardíaca" style={{ width: '64px', height: '64px', marginBottom: '16px' }} />
-          <p style={{ fontWeight: 'bold' }}>BPM</p>
-          <p style={{ fontSize: '24px' }}>{data.heart.bpm}</p>
-        </motion.div>
-        <motion.div
-          style={cardStyle}
-          whileHover={{ scale: 1.05 }}
-        >
-          <img src={flexaoImage} alt="Flexão do Braço Esquerdo" style={{ width: '64px', height: '64px', marginBottom: '16px', transform: 'scaleX(-1)' }} />
-          <p style={{ fontWeight: 'bold' }}>Flexão do Braço Esquerdo</p>
-          <p style={{ fontSize: '24px' }}>{data.arms.left.flex}</p>
-        </motion.div>
-        <motion.div
-          style={cardStyle}
-          whileHover={{ scale: 1.05 }}
-        >
-          <img src={contracaoImage} alt="Contração Muscular do Braço Esquerdo" style={{ width: '64px', height: '64px', marginBottom: '16px', transform: 'scaleX(-1)' }} />
-          <p style={{ fontWeight: 'bold' }}>Contração Muscular do Braço Esquerdo</p>
-          <p style={{ fontSize: '24px' }}>{data.arms.left.muscle}</p>
-        </motion.div>
-        <motion.div
-          style={cardStyle}
-          whileHover={{ scale: 1.05 }}
-        >
-          <img src={flexaoImage} alt="Flexão do Braço Direito" style={{ width: '64px', height: '64px', marginBottom: '16px' }} />
-          <p style={{ fontWeight: 'bold' }}>Flexão do Braço Direito</p>
-          <p style={{ fontSize: '24px' }}>{data.arms.right.flex}</p>
-        </motion.div>
-        <motion.div
-          style={cardStyle}
-          whileHover={{ scale: 1.05 }}
-        >
-          <img src={contracaoImage} alt="Contração Muscular do Braço Direito" style={{ width: '64px', height: '64px', marginBottom: '16px' }} />
-          <p style={{ fontWeight: 'bold' }}>Contração Muscular do Braço Direito</p>
-          <p style={{ fontSize: '24px' }}>{data.arms.right.muscle}</p>
-        </motion.div>
+    <div className="flex flex-col items-center justify-start min-h-screen bg-purple-500 p-5">
+      <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl">
+        Informações de Saúde
+      </h1>
+      <div className="flex flex-wrap justify-center w-full max-w-5xl overflow-y-auto">
+        {[
+          { image: heartImage, title: 'BPM', value: data.heart.bpm, alt: 'Frequência Cardíaca' },
+          { image: flexaoImage, title: 'Flexão do Braço Esquerdo', value: data.arms.left.flex, alt: 'Flexão do Braço Esquerdo', mirror: true },
+          { image: contracaoImage, title: 'Contração Muscular do Braço Esquerdo', value: data.arms.left.muscle, alt: 'Contração Muscular do Braço Esquerdo' },
+          { image: flexaoImage, title: 'Flexão do Braço Direito', value: data.arms.right.flex, alt: 'Flexão do Braço Direito' },
+          { image: contracaoImage, title: 'Contração Muscular do Braço Direito', value: data.arms.right.muscle, alt: 'Contração Muscular do Braço Direito', mirror: true },
+        ].map((card, index) => (
+          <motion.div
+            key={index}
+            className="bg-white shadow-md rounded-lg p-5 m-2 text-center transition-transform transform hover:scale-105 flex-1 max-w-xs"
+          >
+            <img 
+              src={card.image} 
+              alt={card.alt} 
+              className={`w-16 h-16 mb-4 ${card.mirror ? 'transform scale-x-[-1]' : ''}`} 
+            />
+            <p className="font-bold">{card.title}</p>
+            <p className="text-2xl">{card.value}</p>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
