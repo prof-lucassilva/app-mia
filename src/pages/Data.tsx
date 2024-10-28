@@ -120,7 +120,7 @@ const Data: React.FC = () => {
               >
                 {bpm}
               </motion.p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-white">
                 Signal Strength: {data.heart.sig}
               </p>
             </motion.div>
