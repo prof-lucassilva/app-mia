@@ -58,7 +58,7 @@ const Data: React.FC = () => {
         ...prevData,
         { time: new Date().toLocaleTimeString(), bpm: newBpm },
       ]);
-    }, 2000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
