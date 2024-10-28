@@ -133,18 +133,18 @@ const Data: React.FC = () => {
             </p>
 
             <LineChart
-              width={400}
+              width={420}
               height={200}
               data={bpmData}
-              margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
-              style={{ width: '100%' }}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              style={{ width: '90%' }}
             >
-              <CartesianGrid strokeDasharray="3 4" />
+              <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="time" tick={{ fill: 'white', fontSize: 10 }} />
               <YAxis tick={{ fill: 'white', fontSize: 10 }} />
               <Tooltip contentStyle={{ backgroundColor: '#ffffff', color: 'white' }} />
               <Legend wrapperStyle={{ color: 'white' }} />
-              <Line type="monotone" dataKey="bpm" stroke="#8884d8" activeDot={{ r: 6 }}/>
+              <Line type="monotone" dataKey="bpm" stroke="#5e4343" activeDot={{ r: 8 }}/>
             </LineChart>
           </motion.div>
 
