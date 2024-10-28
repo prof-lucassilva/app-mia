@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import data from '../sample.json';
 import heartImage from '../assets/frequencia-cardiaca.png';
@@ -6,57 +6,152 @@ import flexaoImage from '../assets/flexao.png';
 import contracaoImage from '../assets/contracao.png';
 
 const Data: React.FC = () => {
+  const [userName, setUserName] = useState('');
+  const [userAge, setUserAge] = useState('');
+  const [isFormVisible, setIsFormVisible] = useState(true);
+  const [maxHeartRate, setMaxHeartRate] = useState<number | null>(null);
+  const [bpm, setBpm] = useState(data.heart.bpm);
+  const [bpmScale, setBpmScale] = useState(1);
+
+  useEffect(() => {
+    const storedName = localStorage.getItem('userName');
+    const storedAge = localStorage.getItem('userAge');
+    if (storedName && storedAge) {
+      setUserName(storedName);
+      setUserAge(storedAge);
+      setIsFormVisible(false);
+      const age = parseInt(storedAge);
+      setMaxHeartRate(220 - age);
+    }
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('userName', userName);
+    localStorage.setItem('userAge', userAge);
+    setIsFormVisible(false);
+  };
+
+  // Função para determinar a cor do card com base na FCM
+  const getCardColor = (bpm: number) => {
+    if (bpm < maxHeartRate! * 0.6) return 'bg-green-500';
+    if (bpm < maxHeartRate! * 0.7) return 'bg-yellow-500';
+    if (bpm < maxHeartRate! * 0.8) return 'bg-blue-500';
+    if (bpm < maxHeartRate! * 0.9) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
+
+  // Efeito para atualizar o BPM e animar o card
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Simula a mudança do BPM (substitua isso pela lógica real)
+      const newBpm = Math.floor(Math.random() * (maxHeartRate! + 1));
+      setBpm(newBpm);
+      setTimeout(() => setBpmScale(1), 500);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [maxHeartRate]);
+
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen bg-purple-500 p-5">
-      <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl">
-        Informações de Saúde
-      </h1>
-      <div className="w-full max-w-5xl overflow-y-auto">
-        {/* Primeiro cartão ocupa toda a largura */}
-        <motion.div
-          className="bg-white shadow-md rounded-lg p-5 mb-4 text-center transition-transform transform hover:scale-105 w-full"
+    <div 
+      className="flex flex-col items-center justify-center min-h-screen p-5 overflow-hidden"
+      style={{
+        backgroundImage: 'radial-gradient(circle, rgba(126,27,219,0.8), rgba(0,0,0,0.8))',
+      }}
+    >
+      {isFormVisible ? (
+        <motion.form
+          onSubmit={handleSubmit}
+          className="flex flex-col items-center mb-5"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          exit={{ opacity: 0, y: -20 }}
         >
-          <img 
-            src={heartImage} 
-            alt="Frequência Cardíaca" 
-            className="w-16 h-16 mb-4" 
+          <h2 className="text-white text-lg mb-4">Por favor, insira suas informações:</h2>
+          <motion.input
+            type="text"
+            placeholder="Nome"
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+            className="p-2 mb-2 rounded"
+            required
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
           />
-          <p className="font-bold">BPM</p>
-          <p className="text-2xl">{data.heart.bpm}</p>
-          <p className="text-sm text-gray-600">
-            Signal Strength: {data.heart.sig}
-          </p>
-        </motion.div>
-
-        {/* Cartões restantes em uma grade */}
-        <div className="grid grid-cols-2 gap-4 w-full">
-          {[
-            { image: flexaoImage, title: 'Flexão do Braço Esquerdo', value: data.arms.left.flex, alt: 'Flexão do Braço Esquerdo', mirror: true },
-            { image: contracaoImage, title: 'Contração Muscular do Braço Esquerdo', value: data.arms.left.muscle, alt: 'Contração Muscular do Braço Esquerdo' },
-            { image: flexaoImage, title: 'Flexão do Braço Direito', value: data.arms.right.flex, alt: 'Flexão do Braço Direito' },
-            { image: contracaoImage, title: 'Contração Muscular do Braço Direito', value: data.arms.right.muscle, alt: 'Contração Muscular do Braço Direito', mirror: true },
-          ].map((card, index) => (
+          <motion.input
+            type="number"
+            placeholder="Idade"
+            value={userAge}
+            onChange={(e) => setUserAge(e.target.value)}
+            className="p-2 mb-4 rounded"
+            required
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          />
+          <button type="submit" className="bg-white text-purple-500 p-2 rounded">
+            Começar
+          </button>
+        </motion.form>
+      ) : (
+        <>
+          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl">
+            Informações de Saúde de {userName}, {userAge} anos
+          </h1>
+          <div className="w-full max-w-5xl overflow-y-auto">
             <motion.div
-              key={index}
-              className="bg-white shadow-md rounded-lg p-5 text-center transition-transform transform hover:scale-105"
-              initial={{ opacity: 0, y: 20 }}
+              className={`shadow-md rounded-lg p-5 mb-4 text-center transition-transform transform hover:scale-105 w-full ${getCardColor(bpm)}`}
+              initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.5 }}
             >
               <img 
-                src={card.image} 
-                alt={card.alt} 
-                className={`w-16 h-16 mb-4 ${card.mirror ? 'transform scale-x-[-1]' : ''}`} 
+                src={heartImage} 
+                alt="Frequência Cardíaca" 
+                className="w-16 h-16 mb-4 mx-auto" 
               />
-              <p className="font-bold">{card.title}</p>
-              <p className="text-2xl">{card.value}</p>
+              <p className="font-bold">BPM</p>
+              <motion.p
+                className="text-2xl"
+                animate={{ scale: bpmScale }}
+                transition={{ duration: 0.5 }}
+              >
+                {bpm}
+              </motion.p>
+              <p className="text-sm text-gray-600">
+                Signal Strength: {data.heart.sig}
+              </p>
             </motion.div>
-          ))}
-        </div>
-      </div>
+
+            <div className="grid grid-cols-2 gap-4 w-full">
+              {[
+                { image: flexaoImage, title: 'Flexão do Braço Direito', value: data.arms.right.flex, alt: 'Flexão do Braço Direito' },
+                { image: flexaoImage, title: 'Flexão do Braço Esquerdo', value: data.arms.left.flex, alt: 'Flexão do Braço Esquerdo', mirror: true },
+                { image: contracaoImage, title: 'Contração Muscular do Braço Direito', value: data.arms.right.muscle, alt: 'Contração Muscular do Braço Direito', mirror: true },
+                { image: contracaoImage, title: 'Contração Muscular do Braço Esquerdo', value: data.arms.left.muscle, alt: 'Contração Muscular do Braço Esquerdo' },
+              ].map((card, index) => (
+                <motion.div
+                  key={index}
+                  className="bg-white shadow-md rounded-lg p-5 text-center transition-transform transform hover:scale-105"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <img 
+                    src={card.image} 
+                    alt={card.alt} 
+                    className={`w-16 h-16 mb-4 mx-auto ${card.mirror ? 'transform scale-x-[-1]' : ''}`} 
+                  />
+                  <p className="font-bold">{card.title}</p>
+                  <p className="text-2xl">{card.value}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
