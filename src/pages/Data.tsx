@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'; // Importa componentes do Recharts
 import data from '../sample.json';
 import heartImage from '../assets/frequencia-cardiaca.png';
 import flexaoImage from '../assets/flexao.png';
@@ -12,6 +13,7 @@ const Data: React.FC = () => {
   const [maxHeartRate, setMaxHeartRate] = useState<number | null>(null);
   const [bpm, setBpm] = useState(data.heart.bpm);
   const [bpmScale, setBpmScale] = useState(1);
+  const [bpmData, setBpmData] = useState<{ time: string; bpm: number }[]>([]);
 
   useEffect(() => {
     const storedName = localStorage.getItem('userName');
@@ -47,7 +49,14 @@ const Data: React.FC = () => {
       // Simula a mudança do BPM (substitua isso pela lógica real)
       const newBpm = Math.floor(Math.random() * (maxHeartRate! + 1));
       setBpm(newBpm);
+      setBpmScale(1.1);
       setTimeout(() => setBpmScale(1), 500);
+
+      // Adiciona o novo BPM ao histórico
+      setBpmData((prevData) => [
+        ...prevData,
+        { time: new Date().toLocaleTimeString(), bpm: newBpm },
+      ]);
     }, 3000);
 
     return () => clearInterval(interval);
@@ -100,55 +109,67 @@ const Data: React.FC = () => {
           <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl">
             Informações de Saúde de {userName}, {userAge} anos
           </h1>
-          <div className="w-full max-w-5xl overflow-y-auto">
-            <motion.div
-              className={`shadow-md rounded-lg p-5 mb-4 text-center transition-transform transform hover:scale-105 w-full ${getCardColor(bpm)}`}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
+          <motion.div
+            className={`shadow-md rounded-lg p-5 mb-4 text-center transition-transform transform hover:scale-105 w-full ${getCardColor(bpm)}`}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <img 
+              src={heartImage} 
+              alt="Frequência Cardíaca" 
+              className="w-16 h-16 mb-4 mx-auto" 
+            />
+            <p className="font-bold">BPM</p>
+            <motion.p
+              className="text-2xl"
+              animate={{ scale: bpmScale }}
               transition={{ duration: 0.5 }}
             >
-              <img 
-                src={heartImage} 
-                alt="Frequência Cardíaca" 
-                className="w-16 h-16 mb-4 mx-auto" 
-              />
-              <p className="font-bold">BPM</p>
-              <motion.p
-                className="text-2xl"
-                animate={{ scale: bpmScale }}
-                transition={{ duration: 0.5 }}
-              >
-                {bpm}
-              </motion.p>
-              <p className="text-sm text-white">
-                Signal Strength: {data.heart.sig}
-              </p>
-            </motion.div>
+              {bpm}
+            </motion.p>
+            <p className="text-sm text-white">
+              Signal Strength: {data.heart.sig}
+            </p>
 
-            <div className="grid grid-cols-2 gap-4 w-full">
-              {[
-                { image: flexaoImage, title: 'Flexão do Braço Direito', value: data.arms.right.flex, alt: 'Flexão do Braço Direito' },
-                { image: flexaoImage, title: 'Flexão do Braço Esquerdo', value: data.arms.left.flex, alt: 'Flexão do Braço Esquerdo', mirror: true },
-                { image: contracaoImage, title: 'Contração Muscular do Braço Direito', value: data.arms.right.muscle, alt: 'Contração Muscular do Braço Direito', mirror: true },
-                { image: contracaoImage, title: 'Contração Muscular do Braço Esquerdo', value: data.arms.left.muscle, alt: 'Contração Muscular do Braço Esquerdo' },
-              ].map((card, index) => (
-                <motion.div
-                  key={index}
-                  className="bg-white shadow-md rounded-lg p-5 text-center transition-transform transform hover:scale-105"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <img 
-                    src={card.image} 
-                    alt={card.alt} 
-                    className={`w-16 h-16 mb-4 mx-auto ${card.mirror ? 'transform scale-x-[-1]' : ''}`} 
-                  />
-                  <p className="font-bold">{card.title}</p>
-                  <p className="text-2xl">{card.value}</p>
-                </motion.div>
-              ))}
-            </div>
+            <LineChart
+              width={600}
+              height={200}
+              data={bpmData}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="time" tick={{ fill: 'white', fontSize: 10 }} />
+              <YAxis tick={{ fill: 'white', fontSize: 10 }} />
+              <Tooltip contentStyle={{ backgroundColor: '#ffffff', color: 'white' }} />
+              <Legend wrapperStyle={{ color: 'white' }} />
+              <Line type="monotone" dataKey="bpm" stroke="#ffffff" activeDot={{ r: 8 }} />
+            </LineChart>
+          </motion.div>
+
+          <div className="grid grid-cols-2 gap-4 w-full">
+            {[
+              { image: flexaoImage, title: 'Flexão do Braço Direito', value: data.arms.right.flex, alt: 'Flexão do Braço Direito' },
+              { image: flexaoImage, title: 'Flexão do Braço Esquerdo', value: data.arms.left.flex, alt: 'Flexão do Braço Esquerdo', mirror: true },
+              { image: contracaoImage, title: 'Contração Muscular do Braço Direito', value: data.arms.right.muscle, alt: 'Contração Muscular do Braço Direito', mirror: true },
+              { image: contracaoImage, title: 'Contração Muscular do Braço Esquerdo', value: data.arms.left.muscle, alt: 'Contração Muscular do Braço Esquerdo' },
+            ].map((card, index) => (
+              <motion.div
+                key={index}
+                className="bg-white shadow-md rounded-lg p-5 text-center transition-transform transform hover:scale-105"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <img 
+                  src={card.image} 
+                  alt={card.alt} 
+                  className={`w-16 h-16 mb-4 mx-auto ${card.mirror ? 'transform scale-x-[-1]' : ''}`} 
+                />
+                <p className="font-bold">{card.title}</p>
+                <p className="text-2xl">{card.value}</p>
+              </motion.div>
+            ))}
           </div>
         </>
       )}
