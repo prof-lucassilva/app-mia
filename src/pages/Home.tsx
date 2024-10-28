@@ -24,7 +24,7 @@ const Home: React.FC = () => {
                 src={miaLogo}
                 alt="MIA Logo"
                 initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1, x: isExiting ? -200 : 0 }}
+                animate={{ opacity: 1, scale: 1, y: isExiting ? -200 : 0 }}
                 transition={{ duration: 1 }}
                 style={styles.logo}
             />
