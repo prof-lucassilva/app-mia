@@ -46,7 +46,7 @@ const Data: React.FC = () => {
   // Efeito para atualizar o BPM e animar o card
   useEffect(() => {
     const interval = setInterval(() => {
-      // Simula a mudança do BPM (substitua isso pela lógica real)
+      // Simula a mudança do BPM (substituir isso pela lógica real)
       const newBpm = Math.floor(Math.random() * (maxHeartRate! + 1));
       setBpm(newBpm);
       setBpmScale(1.1);
@@ -128,22 +128,23 @@ const Data: React.FC = () => {
             >
               {bpm}
             </motion.p>
-            <p className="text-sm text-white">
+            <p className="text-sm text-gray-600">
               Signal Strength: {data.heart.sig}
             </p>
 
             <LineChart
-              width={600}
+              width={400}
               height={200}
               data={bpmData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
+              style={{ width: '100%' }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 4" />
               <XAxis dataKey="time" tick={{ fill: 'white', fontSize: 10 }} />
               <YAxis tick={{ fill: 'white', fontSize: 10 }} />
               <Tooltip contentStyle={{ backgroundColor: '#ffffff', color: 'white' }} />
               <Legend wrapperStyle={{ color: 'white' }} />
-              <Line type="monotone" dataKey="bpm" stroke="#ffffff" activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="bpm" stroke="#8884d8" activeDot={{ r: 6 }}/>
             </LineChart>
           </motion.div>
 
