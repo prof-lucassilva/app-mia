@@ -3,7 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
 import Data from './pages/Data';
-import Data from './pages/Data2';
+import Data2 from './pages/Data2';
 
 const App: React.FC = () => {
     return (
