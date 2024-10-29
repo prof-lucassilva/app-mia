@@ -163,6 +163,28 @@ const Data: React.FC = () => {
               </motion.div>
             ))}
           </div>
+
+          <h2 className="text-white mb-4 text-lg">Gráfico de Valores dos Cards</h2>
+          <LineChart
+            width={Math.min(window.innerWidth * 0.9, 420)}
+            height={200}
+            data={[
+              { name: 'Direito Flexão', flexaoDireita: data.arms.right.flex, contraçãoDireita: data.arms.right.muscle },
+              { name: 'Esquerdo Flexão', flexaoEsquerda: data.arms.left.flex, contraçãoEsquerda: data.arms.left.muscle },
+            ]}
+            margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+            className="w-full max-w-xs sm:max-w-md"
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fill: 'white', fontSize: 10 }} />
+            <YAxis tick={{ fill: 'white', fontSize: 10 }} />
+            <Tooltip contentStyle={{ backgroundColor: '#ffffff', color: 'white' }} />
+            <Legend wrapperStyle={{ color: 'white' }} />
+            <Line type="monotone" dataKey="flexaoDireita" stroke="#5e4343" activeDot={{ r: 8 }} />
+            <Line type="monotone" dataKey="flexaoEsquerda" stroke="#4e8c4e" />
+            <Line type="monotone" dataKey="contraçãoDireita" stroke="#4345e4" />
+            <Line type="monotone" dataKey="contraçãoEsquerda" stroke="#e45e43" />
+          </LineChart>
         </>
       )}
     </div>

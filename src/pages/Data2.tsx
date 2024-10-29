@@ -1,117 +1,128 @@
-import { motion } from 'framer-motion';
-import React, { useEffect, useState } from 'react';
-import { CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts';
+"use client"
 
-import contracaoImage from '../assets/contracao.png';
-import flexaoImage from '../assets/flexao.png';
-import heartImage from '../assets/frequencia-cardiaca.png';
-import data from '../sample.json';
+import { motion } from 'framer-motion'
+import React, { useEffect, useState } from 'react'
+import { CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts'
+
+import contracaoImage from '../assets/contracao.png'
+import flexaoImage from '../assets/flexao.png'
+import heartImage from '../assets/frequencia-cardiaca.png'
+import data from '../sample.json'
+
+// Simplified Card components
+const Card: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
+  <div className={`bg-white shadow-md rounded-lg ${className}`}>{children}</div>
+)
+
+const CardHeader: React.FC<React.PropsWithChildren> = ({ children }) => (
+  <div className="px-6 py-4 border-b border-gray-200">{children}</div>
+)
+
+const CardTitle: React.FC<React.PropsWithChildren> = ({ children }) => (
+  <h2 className="text-xl font-semibold text-gray-800">{children}</h2>
+)
+
+const CardContent: React.FC<React.PropsWithChildren> = ({ children }) => (
+  <div className="p-6">{children}</div>
+)
 
 const Data: React.FC = () => {
-  const [userName, setUserName] = useState('');
-  const [userAge, setUserAge] = useState('');
-  const [isFormVisible, setIsFormVisible] = useState(true);
-  const [maxHeartRate, setMaxHeartRate] = useState<number | null>(null);
-  const [bpm, setBpm] = useState(data.heart.bpm);
-  const [bpmScale, setBpmScale] = useState(1);
-  const [bpmData, setBpmData] = useState<{ time: string; bpm: number }[]>([]);
-
-  // Dados de EMG para flexão e contração muscular
-  const [flexDataRight, setFlexDataRight] = useState<{ time: string; value: number }[]>([]);
-  const [flexDataLeft, setFlexDataLeft] = useState<{ time: string; value: number }[]>([]);
-  const [muscleDataRight, setMuscleDataRight] = useState<{ time: string; value: number }[]>([]);
-  const [muscleDataLeft, setMuscleDataLeft] = useState<{ time: string; value: number }[]>([]);
+  const [userName, setUserName] = useState('')
+  const [userAge, setUserAge] = useState('')
+  const [isFormVisible, setIsFormVisible] = useState(true)
+  const [maxHeartRate, setMaxHeartRate] = useState<number | null>(null)
+  const [bpm, setBpm] = useState(data.heart.bpm)
+  const [bpmScale, setBpmScale] = useState(1)
+  const [bpmData, setBpmData] = useState<{ time: string; bpm: number }[]>([])
+  const [armData, setArmData] = useState<{
+    time: string;
+    rightFlex: number;
+    leftFlex: number;
+    rightMuscle: number;
+    leftMuscle: number;
+  }[]>([])
+  const [latestArmData, setLatestArmData] = useState({
+    rightFlex: 0,
+    leftFlex: 0,
+    rightMuscle: 0,
+    leftMuscle: 0
+  });
 
   useEffect(() => {
-    const storedName = localStorage.getItem('userName');
-    const storedAge = localStorage.getItem('userAge');
+    const storedName = localStorage.getItem('userName')
+    const storedAge = localStorage.getItem('userAge')
     if (storedName && storedAge) {
-      setUserName(storedName);
-      setUserAge(storedAge);
-      setIsFormVisible(false);
-      const age = parseInt(storedAge);
-      setMaxHeartRate(220 - age);
+      setUserName(storedName)
+      setUserAge(storedAge)
+      setIsFormVisible(false)
+      const age = parseInt(storedAge)
+      setMaxHeartRate(220 - age)
     }
-  }, []);
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    localStorage.setItem('userName', userName);
-    localStorage.setItem('userAge', userAge);
-    setIsFormVisible(false);
-  };
+    e.preventDefault()
+    localStorage.setItem('userName', userName)
+    localStorage.setItem('userAge', userAge)
+    setIsFormVisible(false)
+  }
 
   const getCardColor = (bpm: number) => {
-    if (bpm < maxHeartRate! * 0.6) return 'bg-green-500';
-    if (bpm < maxHeartRate! * 0.7) return 'bg-yellow-500';
-    if (bpm < maxHeartRate! * 0.8) return 'bg-orange-500';
-    if (bpm < maxHeartRate! * 0.9) return 'bg-purple-500';
-    return 'bg-red-500';
-  };
+    if (bpm < maxHeartRate! * 0.7) return 'bg-green-500'
+    if (bpm < maxHeartRate! * 0.8) return 'bg-yellow-500'
+    if (bpm < maxHeartRate! * 0.9) return 'bg-orange-500'
+    return 'bg-red-500'
+  }
 
-  // Simulação do BPM
+  // Simulated BPM data update
   useEffect(() => {
-    const minBpm = 95;
-    const maxBpm = 180;
+    const minBpm = 95
+    const maxBpm = 180
 
     const interval = setInterval(() => {
-      const newBpm = Math.floor(Math.random() * (maxBpm - minBpm + 1)) + minBpm;
-      setBpm(newBpm);
-      setBpmScale(1.15);
-      setTimeout(() => setBpmScale(1), 500);
+      const newBpm = Math.floor(Math.random() * (maxBpm - minBpm + 1)) + minBpm
+      setBpm(newBpm)
+      setBpmScale(1.15)
+      setTimeout(() => setBpmScale(1), 500)
+
+      const currentTime = new Date().toLocaleTimeString()
 
       setBpmData((prevData) => [
-        ...prevData,
-        { time: new Date().toLocaleTimeString(), bpm: newBpm },
-      ]);
-    }, 2000);
+        ...prevData.slice(-20),
+        { time: currentTime, bpm: newBpm },
+      ])
+    }, 1000)
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval)
+  }, [])
 
-  // Função para simular valores de EMG
-  const simulateEMGData = () => {
-    const newTime = new Date().toLocaleTimeString();
-
-    // Simula valores para flexão e contração muscular
-    setFlexDataRight(prev => [...prev, { time: newTime, value: Math.floor(Math.random() * 601) }]);
-    setFlexDataLeft(prev => [...prev, { time: newTime, value: Math.floor(Math.random() * 601) }]);
-    setMuscleDataRight(prev => [...prev, { time: newTime, value: Math.floor(Math.random() * 401) }]);
-    setMuscleDataLeft(prev => [...prev, { time: newTime, value: Math.floor(Math.random() * 401) }]);
-  };
-
-  // Executa a simulação a cada 2 segundos
+  // Simulated arm data update
   useEffect(() => {
-    const interval = setInterval(simulateEMGData, 2000);
-    return () => clearInterval(interval);
-  }, []);
+    const interval = setInterval(() => {
+      const currentTime = new Date().toLocaleTimeString()
+      const newArmData = {
+        time: currentTime,
+        rightFlex: Math.floor(Math.random() * 1024),
+        leftFlex: Math.floor(Math.random() * 1024),
+        rightMuscle: Math.floor(Math.random() * 1024),
+        leftMuscle: Math.floor(Math.random() * 1024),
+      };
+      setArmData((prevData) => [...prevData.slice(-20), newArmData]);
+      setLatestArmData(newArmData);
+    }, 200)
 
-  // Função para determinar a cor com base no valor do EMG
-  const getEMGColor = (value: number, isFlex: boolean) => {
-    if (isFlex) {
-      if (value <= 300) return '#4caf50'; // Baixo
-      if (value <= 450) return '#ffeb3b'; // Moderado
-      if (value <= 600) return '#ff9800'; // Alto
-      return '#f44336'; // Muito Alto
-    } else {
-      if (value <= 150) return '#4caf50'; // Baixo
-      if (value <= 250) return '#ffeb3b'; // Moderado
-      if (value <= 350) return '#ff9800'; // Alto
-      return '#f44336'; // Muito Alto
-    }
-  };
+    return () => clearInterval(interval)
+  }, [])
 
   return (
-    <div
-      className="flex flex-col items-center justify-center min-h-screen pt-5 sm:pt-10 px-4 py-5 overflow-hidden"
-      style={{
-        backgroundImage: 'radial-gradient(circle, rgba(126,27,219,0.8), rgba(0,0,0,0.8))',
-      }}
-    >
+    <div className="min-h-screen bg-gradient-radial from-purple-800 to-black p-4 md:p-8 overflow-x-hidden"
+    style={{
+      backgroundImage: 'radial-gradient(circle, rgba(126,27,219,0.8), rgba(0,0,0,0.8))',
+    }}>
       {isFormVisible ? (
         <motion.form
           onSubmit={handleSubmit}
-          className="flex flex-col items-center mb-5 w-full max-w-xs sm:max-w-sm"
+          className="flex flex-col items-center mb-5 w-full max-w-xs sm:max-w-sm mx-auto"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
@@ -139,86 +150,107 @@ const Data: React.FC = () => {
         </motion.form>
       ) : (
         <>
-          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl mt-30 sm:mt-14">
+          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl w-full">
             Informações de Saúde de {userName}, {userAge} anos
           </h1>
-          <motion.div
-            className={shadow-md rounded-lg p-4 sm:p-5 mb-4 text-center transition-transform transform hover:scale-105 w-full max-w-md ${getCardColor(
-              bpm
-            )}}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <img
-              src={heartImage}
-              alt="Frequência Cardíaca"
-              className="w-12 h-12 sm:w-16 sm:h-16 mb-4 mx-auto"
-            />
-            <p className="font-bold">BPM</p>
-            <motion.p className="text-2xl" animate={{ scale: bpmScale }} transition={{ duration: 0.5 }}>
-              {bpm}
-            </motion.p>
-            <p className="text-sm text-white">Signal Strength: {data.heart.sig}</p>
-
-            <LineChart
-              width={Math.min(window.innerWidth * 0.9, 420)}
-              height={200}
-              data={bpmData}
-              margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-              className="w-full max-w-xs sm:max-w-md"
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" tick={{ fill: 'white', fontSize: 10 }} />
-              <YAxis tick={{ fill: 'white', fontSize: 10 }} />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', color: 'white' }} />
-              <Legend wrapperStyle={{ color: 'white' }} />
-              <Line type="monotone" dataKey="bpm" stroke="#5e4343" activeDot={{ r: 8 }} />
-            </LineChart>
-          </motion.div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-2xl">
-            {[
-              { image: flexaoImage, title: 'Flexão do Braço Direito', data: flexDataRight, isFlex: true },
-              { image: flexaoImage, title: 'Flexão do Braço Esquerdo', data: flexDataLeft, isFlex: true, mirror: true },
-              { image: contracaoImage, title: 'Contração Muscular do Braço Esquerdo', data: muscleDataLeft, isFlex: false, mirror: true },
-              { image: contracaoImage, title: 'Contração Muscular do Braço Direito', data: muscleDataRight, isFlex: false },
-            ].map((card, index) => (
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="lg:w-1/3">
               <motion.div
-                key={index}
-                className="bg-white shadow-md rounded-lg p-4 sm:p-5 text-center transition-transform transform hover:scale-105"
-                initial={{ opacity: 0, y: 20 }}
+                className={`shadow-md rounded-lg p-4 sm:p-5 mb-4 text-center transition-transform transform hover:scale-105 w-full ${getCardColor(
+                  bpm
+                )}`}
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.5 }}
               >
                 <img
-                  src={card.image}
-                  alt={card.title}
-                  className={w-12 h-12 sm:w-16 sm:h-16 mb-4 mx-auto ${card.mirror ? 'transform scale-x-[-1]' : ''}}
+                  src={heartImage}
+                  alt="Frequência Cardíaca"
+                  className="w-12 h-12 sm:w-16 sm:h-16 mb-4 mx-auto"
                 />
-                <p className="font-bold">{card.title}</p>
+                <p className="font-bold">BPM</p>
+                <motion.p className="text-2xl" animate={{ scale: bpmScale }} transition={{ duration: 0.5 }}>
+                  {bpm}
+                </motion.p>
+                <p className="text-sm text-white">Signal Strength: {data.heart.sig}</p>
 
-                {/* Gráfico do Card */}
-                <LineChart
-                  width={150}
-                  height={100}
-                  data={card.data}
-                  margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
-                  style={{ color: getEMGColor(card.data[card.data.length - 1]?.value || 0, card.isFlex) }} // Cor baseado no último valor
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" tick={{ fontSize: 8 }} />
-                  <YAxis hide />
-                  <Tooltip contentStyle={{ backgroundColor: '#ffffff', color: 'black' }} />
-                  <Line type="monotone" dataKey="value" stroke={getEMGColor(card.data[card.data.length - 1]?.value || 0, card.isFlex)} />
-                </LineChart>
+                <div className="h-64 mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={bpmData}
+                      margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="time" tick={{ fill: 'white', fontSize: 10 }} />
+                      <YAxis tick={{ fill: 'white', fontSize: 10 }} />
+                      <Tooltip contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', color: 'black' }} />
+                      <Legend wrapperStyle={{ color: 'white' }} />
+                      <Line type="monotone" dataKey="bpm" stroke="#ffffff" activeDot={{ r: 8 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </motion.div>
-            ))}
+            </div>
+
+            <div className="lg:w-1/3">
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {[
+                  { image: flexaoImage, title: 'Flexão Braço Direito', value: latestArmData.rightFlex, alt: 'Flexão do Braço Direito' },
+                  { image: flexaoImage, title: 'Flexão Braço Esquerdo', value: latestArmData.leftFlex, alt: 'Flexão do Braço Esquerdo', mirror: true },
+                  { image: contracaoImage, title: 'Contração Muscular Braço Direito', value: latestArmData.rightMuscle, alt: 'Contração Muscular do Braço Direito', mirror: true },
+                  { image: contracaoImage, title: 'Contração Muscular Braço Esquerdo', value: latestArmData.leftMuscle, alt: 'Contração Muscular do Braço Esquerdo' },
+                ].map((card, index) => (
+                  <motion.div
+                    key={index}
+                    className="bg-white shadow-md rounded-lg p-4 text-center transition-transform transform hover:scale-105"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <img
+                      src={card.image}
+                      alt={card.alt}
+                      className={`w-12 h-12 mb-4 mx-auto ${card.mirror ? 'transform scale-x-[-1]' : ''}`}
+                    />
+                    <p className="font-bold text-sm">{card.title}</p>
+                    <p className="text-xl">{card.value}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:w-1/3">
+              <Card className="w-full">
+                <CardHeader>
+                  <CardTitle>Dados dos Braços ao Longo do Tempo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={armData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="time" />
+                        <YAxis />
+                        <Tooltip contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', color: 'black' }} />
+                        <Legend />
+                        <Line type="monotone" dataKey="rightFlex" stroke="#8884d8" name="Flexão Direita" />
+                        <Line type="monotone" dataKey="leftFlex" stroke="#82ca9d" name="Flexão Esquerda" />
+                        <Line type="monotone" dataKey="rightMuscle" stroke="#ffc658" name="Contração Direita" />
+                        <Line type="monotone" dataKey="leftMuscle" stroke="#ff7300" name="Contração Esquerda" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Data;
+export default Data
