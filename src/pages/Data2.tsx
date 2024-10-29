@@ -103,11 +103,11 @@ const Data: React.FC = () => {
 
   return (
     <div
-      className="flex flex-col items-center justify-center min-h-screen pt-10 px-4 py-5 overflow-hidden"
-  style={{
-    backgroundImage: 'radial-gradient(circle, rgba(126,27,219,0.8), rgba(0,0,0,0.8))',
-    paddingTop: '100px',
-  }}
+      className="flex flex-col items-center justify-center min-h-[calc(100vh-60px)] pt-5 px-4 py-5 overflow-hidden"
+      style={{
+        backgroundImage: 'radial-gradient(circle, rgba(126,27,219,0.8), rgba(0,0,0,0.8))',
+        paddingTop: '60px', // Ajuste conforme necessário
+      }}
     >
       {isFormVisible ? (
         <motion.form
@@ -140,7 +140,7 @@ const Data: React.FC = () => {
         </motion.form>
       ) : (
         <>
-          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl mt-30 sm:mt-14">
+          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl">
             Informações de Saúde de {userName}, {userAge} anos
           </h1>
           <motion.div
@@ -180,39 +180,21 @@ const Data: React.FC = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-2xl">
             {[
-              { image: flexaoImage, title: 'Flexão do Braço Direito', data: flexDataRight, isFlex: true },
-              { image: flexaoImage, title: 'Flexão do Braço Esquerdo', data: flexDataLeft, isFlex: true, mirror: true },
-              { image: contracaoImage, title: 'Contração Muscular do Braço Esquerdo', data: muscleDataLeft, isFlex: false, mirror: true },
-              { image: contracaoImage, title: 'Contração Muscular do Braço Direito', data: muscleDataRight, isFlex: false },
-            ].map((card, index) => (
+              { image: contracaoImage, title: 'Contração Muscular (Direita)', data: muscleDataRight, isFlex: false },
+              { image: flexaoImage, title: 'Flexão Muscular (Direita)', data: flexDataRight, isFlex: true },
+              { image: contracaoImage, title: 'Contração Muscular (Esquerda)', data: muscleDataLeft, isFlex: false },
+              { image: flexaoImage, title: 'Flexão Muscular (Esquerda)', data: flexDataLeft, isFlex: true },
+            ].map(({ image, title, data, isFlex }) => (
               <motion.div
-                key={index}
-                className="bg-white shadow-md rounded-lg p-4 sm:p-5 text-center transition-transform transform hover:scale-105"
-                initial={{ opacity: 0, y: 20 }}
+                key={title}
+                className={`shadow-md rounded-lg p-4 text-center transition-transform transform hover:scale-105 ${getEMGColor(data[data.length - 1]?.value || 0, isFlex)}`}
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.5 }}
               >
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className={`w-12 h-12 sm:w-16 sm:h-16 mb-4 mx-auto ${card.mirror ? 'transform scale-x-[-1]' : ''}`}
-                />
-                <p className="font-bold">{card.title}</p>
-
-                {/* Gráfico do Card */}
-                <LineChart
-                  width={150}
-                  height={100}
-                  data={card.data}
-                  margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
-                  style={{ color: getEMGColor(card.data[card.data.length - 1]?.value || 0, card.isFlex) }} // Cor baseado no último valor
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" tick={{ fontSize: 8 }} />
-                  <YAxis hide />
-                  <Tooltip contentStyle={{ backgroundColor: '#ffffff', color: 'black' }} />
-                  <Line type="monotone" dataKey="value" stroke={getEMGColor(card.data[card.data.length - 1]?.value || 0, card.isFlex)} />
-                </LineChart>
+                <img src={image} alt={title} className="w-12 h-12 mb-4 mx-auto" />
+                <p className="font-bold">{title}</p>
+                <p className="text-2xl">{data[data.length - 1]?.value || 0}</p>
               </motion.div>
             ))}
           </div>
