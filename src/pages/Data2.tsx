@@ -139,7 +139,7 @@ const Data: React.FC = () => {
         </motion.form>
       ) : (
         <>
-          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl mt-16 sm:mt-10">
+          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl mt-20 sm:mt-14">
             Informações de Saúde de {userName}, {userAge} anos
           </h1>
           <motion.div
