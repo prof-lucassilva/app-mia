@@ -139,7 +139,7 @@ const Data: React.FC = () => {
         </motion.form>
       ) : (
         <>
-          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl mt-20 sm:mt-14">
+          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl mt-30 sm:mt-14">
             Informações de Saúde de {userName}, {userAge} anos
           </h1>
           <motion.div
@@ -181,8 +181,8 @@ const Data: React.FC = () => {
             {[
               { image: flexaoImage, title: 'Flexão do Braço Direito', data: flexDataRight, isFlex: true },
               { image: flexaoImage, title: 'Flexão do Braço Esquerdo', data: flexDataLeft, isFlex: true, mirror: true },
-              { image: contracaoImage, title: 'Contração Muscular do Braço Direito', data: muscleDataRight, isFlex: false },
               { image: contracaoImage, title: 'Contração Muscular do Braço Esquerdo', data: muscleDataLeft, isFlex: false, mirror: true },
+              { image: contracaoImage, title: 'Contração Muscular do Braço Direito', data: muscleDataRight, isFlex: false },
             ].map((card, index) => (
               <motion.div
                 key={index}
