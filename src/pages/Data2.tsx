@@ -103,10 +103,11 @@ const Data: React.FC = () => {
 
   return (
     <div
-      className="flex flex-col items-center justify-center min-h-screen pt-5 sm:pt-10 px-4 py-5 overflow-hidden"
-      style={{
-        backgroundImage: 'radial-gradient(circle, rgba(126,27,219,0.8), rgba(0,0,0,0.8))',
-      }}
+      className="flex flex-col items-center justify-center min-h-screen pt-10 px-4 py-5 overflow-hidden"
+  style={{
+    backgroundImage: 'radial-gradient(circle, rgba(126,27,219,0.8), rgba(0,0,0,0.8))',
+    paddingTop: '80px',
+  }}
     >
       {isFormVisible ? (
         <motion.form
