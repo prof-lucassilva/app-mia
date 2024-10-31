@@ -56,7 +56,7 @@ const Data: React.FC = () => {
   const [userName, setUserName] = useState('')
   const [userAge, setUserAge] = useState('')
   const [isFormVisible, setIsFormVisible] = useState(true)
-  const [maxHeartRate, setMaxHeartRate] = useState<number | null>(null)
+  // const [maxHeartRate, setMaxHeartRate] = useState<number | null>(null)
   const [bpm, setBpm] = useState(data.heart.bpm)
   const [bpmScale, setBpmScale] = useState(1)
   const [bpmData, setBpmData] = useState<{ time: string; bpm: number }[]>([])
@@ -95,8 +95,8 @@ const Data: React.FC = () => {
       setUserName(storedName)
       setUserAge(storedAge)
       setIsFormVisible(false)
-      const age = parseInt(storedAge)
-      setMaxHeartRate(220 - age)
+      // const age = parseInt(storedAge)
+      // setMaxHeartRate(220 - age)
     }
   }, [])
 
@@ -267,7 +267,7 @@ const Data: React.FC = () => {
             Informações de Saúde de {userName}, {userAge} anos
           </h1>
           <div className="flex flex-col lg:flex-row gap-4">
-            <div className="lg:w-1/3 w-full">
+            <div className="lg:w-1/3">
               {/* Componente de BPM */}
               <motion.div
                 className="shadow-md rounded-lg p-4 text-center transition-transform transform hover:scale-105 w-full bg-white"
@@ -285,7 +285,7 @@ const Data: React.FC = () => {
                   {bpm}
                 </motion.p>
                 <p className="text-sm text-gray-600">Signal Strength: {data.heart.sig}</p>
-                <div className="h-80">
+                <div className="h-60">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={bpmData} margin={{top: 0, right: 10, left: 0, bottom: 5}}>
                       <CartesianGrid strokeDasharray="3 3" />
