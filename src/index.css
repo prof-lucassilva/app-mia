@@ -33,3 +33,14 @@ h2 {
   text-align: center;
   margin-top: 0.5rem; /* Espaçamento menor para aproximar o subtítulo */
 }
+
+.grafico-container {
+  width: 100%;
+  min-height: 250px; /* Defina uma altura mínima para telas pequenas */
+}
+
+@media (max-width: 768px) {
+  .grafico-container {
+    min-height: 400px; /* Aumente a altura em telas pequenas */
+  }
+}
