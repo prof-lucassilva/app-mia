@@ -56,7 +56,6 @@ const Data: React.FC = () => {
   const [userName, setUserName] = useState('')
   const [userAge, setUserAge] = useState('')
   const [isFormVisible, setIsFormVisible] = useState(true)
-  // const [maxHeartRate, setMaxHeartRate] = useState<number | null>(null)
   const [bpm, setBpm] = useState(data.heart.bpm)
   const [bpmScale, setBpmScale] = useState(1)
   const [bpmData, setBpmData] = useState<{ time: string; bpm: number }[]>([])
@@ -95,8 +94,6 @@ const Data: React.FC = () => {
       setUserName(storedName)
       setUserAge(storedAge)
       setIsFormVisible(false)
-      // const age = parseInt(storedAge)
-      // setMaxHeartRate(220 - age)
     }
   }, [])
 
