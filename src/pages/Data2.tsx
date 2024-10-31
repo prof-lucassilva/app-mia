@@ -9,7 +9,6 @@ import contracaoImage from '../assets/contracao.png'
 import flexaoImage from '../assets/flexao.png'
 import heartImage from '../assets/frequencia-cardiaca.png'
 import data from '../sample.json'
-import '../index.css'
 
 // Simplified Card components
 const Card: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
@@ -81,6 +80,12 @@ const Data: React.FC = () => {
     bpmMax: 180,
     armMin: 0,
     armMax: 1024,
+    bpmLowThreshold: 0.7,
+    bpmMediumThreshold: 0.8,
+    bpmHighThreshold: 0.9,
+    armAttentionThreshold: 800,
+    armDangerThreshold: 950,
+    updateInterval: 200,
   })
 
   useEffect(() => {
@@ -134,15 +139,14 @@ const Data: React.FC = () => {
       };
       setArmData((prevData) => [...prevData.slice(-20), newArmData]);
       setLatestArmData(newArmData);
-    }, 200)
+    }, chartParams.updateInterval)
 
     return () => clearInterval(interval)
-  }, [chartParams.armMin, chartParams.armMax])
+  }, [chartParams.armMin, chartParams.armMax, chartParams.updateInterval])
 
   const handleConfigSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setIsConfigModalOpen(false)
-    // Chart parameters are automatically applied due to the dependencies in useEffect hooks
   }
 
   const handleSwitchUser = () => {
@@ -177,8 +181,11 @@ const Data: React.FC = () => {
                   type="number"
                   id={key}
                   value={value}
-                  onChange={(e) => setChartParams({ ...chartParams, [key]: parseFloat(e.target.value) })}
+                  onChange={(e) => setChartParams({ ...chartParams, [key]: key === 'updateInterval' ? parseInt(e.target.value) : parseFloat(e.target.value) })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  step={key.includes('Threshold') ? '0.1' : key === 'updateInterval' ? '100' : '1'}
+                  min={key === 'updateInterval' ? 100 : 0}
+                  max={key.includes('Threshold') ? '1' : undefined}
                 />
               </div>
             ))}
@@ -228,18 +235,18 @@ const Data: React.FC = () => {
       {isFormVisible ? (
         <motion.form
           onSubmit={handleSubmit}
-          className="flex flex-col items-center mb-5 w-full max-w-xs sm:max-w-sm mx-auto mt-4"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
+          className="min-h-screen flex flex-col justify-center items-center bg-gradient-radial from-purple-800 to-black p-4 md:p-8 overflow-hidden"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(126,27,219,0.8), rgba(0,0,0,0.8))',
+          }}
         >
-          <h2 className="text-white text-lg mb-4">Por favor, insira suas informações:</h2>
+          <h2 className="text-white text-lg mb-2">Por favor, insira suas informações:</h2>
           <motion.input
             type="text"
             placeholder="Nome"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
-            className="p-2 mb-2 rounded w-full"
+            className="p-2 mb-2 rounded lg:w-1/4 md:w-1/1"
             required
           />
           <motion.input
@@ -247,16 +254,16 @@ const Data: React.FC = () => {
             placeholder="Idade"
             value={userAge}
             onChange={(e) => setUserAge(e.target.value)}
-            className="p-2 mb-4 rounded w-full"
+            className="p-2 mb-2 rounded lg:w-1/4 md:w-1/1"
             required
           />
-          <button type="submit" className="bg-white text-purple-500 p-2 rounded w-full">
+          <button type="submit" className="bg-white text-purple-500 p-2 rounded lg:w-1/4 md:w-1/1">
             Começar
           </button>
         </motion.form>
       ) : (
         <>
-          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl mt-30 md:top-10">
+          <h1 className="text-white mb-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl max-md:mt-10">
             Informações de Saúde de {userName}, {userAge} anos
           </h1>
           <div className="flex flex-col lg:flex-row gap-4">
@@ -278,9 +285,9 @@ const Data: React.FC = () => {
                   {bpm}
                 </motion.p>
                 <p className="text-sm text-gray-600">Signal Strength: {data.heart.sig}</p>
-                <div className="h-64 mt-4 grafico-container">
+                <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={bpmData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <LineChart data={bpmData} margin={{top: 0, right: 10, left: 0, bottom: 5}}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="time" />
                       <YAxis domain={[chartParams.bpmMin, chartParams.bpmMax]} />
