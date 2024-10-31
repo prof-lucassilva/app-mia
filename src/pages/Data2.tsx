@@ -33,19 +33,23 @@ const Modal: React.FC<{
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-}> = ({ isOpen, onClose, title, children }) => {
+  actions?: React.ReactNode; // Adiciona a prop actions
+}> = ({ isOpen, onClose, title, children, actions }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">{title}</h2>
+          <div className="flex space-x-2">{actions}</div>
+        </div>
         {children}
         <button
           onClick={onClose}
           className="mt-4 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
         >
-          Close
+          Fechar
         </button>
       </div>
     </div>
@@ -165,9 +169,18 @@ const Data: React.FC = () => {
       <Modal
         isOpen={isConfigModalOpen}
         onClose={() => setIsConfigModalOpen(false)}
-        title="Configure Chart Parameters"
+        title="Configurar parâmetros dos gráficos"
+        actions={null /*
+          <button
+            type="submit"
+            form="configForm"
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Salvar Alterações
+          </button>
+    */}
       >
-        <form onSubmit={handleConfigSubmit} className="space-y-4">
+        <form id="configForm" onSubmit={handleConfigSubmit} className="space-y-4 mt-4">
           <div className="grid grid-cols-2 gap-4">
             {Object.entries(chartParams).map(([key, value]) => (
               <div key={key}>
@@ -178,7 +191,12 @@ const Data: React.FC = () => {
                   type="number"
                   id={key}
                   value={value}
-                  onChange={(e) => setChartParams({ ...chartParams, [key]: key === 'updateInterval' ? parseInt(e.target.value) : parseFloat(e.target.value) })}
+                  onChange={(e) =>
+                    setChartParams({
+                      ...chartParams,
+                      [key]: key === 'updateInterval' ? parseInt(e.target.value) : parseFloat(e.target.value),
+                    })
+                  }
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                   step={key.includes('Threshold') ? '0.1' : key === 'updateInterval' ? '100' : '1'}
                   min={key === 'updateInterval' ? 100 : 0}
@@ -187,12 +205,6 @@ const Data: React.FC = () => {
               </div>
             ))}
           </div>
-          <button
-            type="submit"
-            className="w-full px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
-          >
-            Save Changes
-          </button>
         </form>
       </Modal>
 
@@ -200,14 +212,14 @@ const Data: React.FC = () => {
       <Modal
         isOpen={isSwitchUserModalOpen}
         onClose={() => setIsSwitchUserModalOpen(false)}
-        title="Switch User"
+        title="Trocar usuário"
       >
-        <p>Are you sure you want to switch users? This will clear all current data.</p>
+        <p>Tem certeza de que deseja trocar de usuário? Isso limpará todos os dados atuais.</p>
         <button
           onClick={handleSwitchUser}
-          className="mt-4 w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          className="mt-4 mr-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
-          Confirm
+          Confirmar
         </button>
       </Modal>
 
@@ -216,14 +228,14 @@ const Data: React.FC = () => {
         <button
           onClick={() => setIsSwitchUserModalOpen(true)}
           className="p-2 bg-white rounded-full shadow-md text-purple-500"
-          aria-label="Switch user"
+          aria-label="Mudar usuário"
         >
           <User size={24} />
         </button>
         <button
           onClick={() => setIsConfigModalOpen(true)}
           className="p-2 bg-white rounded-full shadow-md text-purple-500"
-          aria-label="Open configuration"
+          aria-label="Abrir configurações"
         >
           <Settings size={24} />
         </button>
@@ -284,7 +296,7 @@ const Data: React.FC = () => {
                 <p className="text-sm text-gray-600">Signal Strength: {data.heart.sig}</p>
                 <div className="h-60">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={bpmData} margin={{top: 0, right: 10, left: 0, bottom: 5}}>
+                    <LineChart data={bpmData} margin={{ top: 0, right: 10, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="time" />
                       <YAxis domain={[chartParams.bpmMin, chartParams.bpmMax]} />
@@ -328,7 +340,7 @@ const Data: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration:  0.5 }}
+                transition={{ duration: 0.5 }}
               >
                 <Card className="w-full">
                   <CardHeader>
@@ -339,7 +351,7 @@ const Data: React.FC = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart
                           data={armData}
-                          margin={{top: 0, right: 10, left: 0, bottom: 5}}
+                          margin={{ top: 0, right: 10, left: 0, bottom: 5 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="time" />
