@@ -1,5 +1,3 @@
-'use client'
-
 import { motion } from 'framer-motion'
 import { Settings, User } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
@@ -33,7 +31,7 @@ const Modal: React.FC<{
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  actions?: React.ReactNode; // Adiciona a prop actions
+  actions?: React.ReactNode;
 }> = ({ isOpen, onClose, title, children, actions }) => {
   if (!isOpen) return null;
 
@@ -71,24 +69,19 @@ const Data: React.FC = () => {
     leftMuscle: number;
   }[]>([])
   const [latestArmData, setLatestArmData] = useState({
-    rightFlex: 0,
-    leftFlex: 0,
-    rightMuscle: 0,
-    leftMuscle: 0
+    rightFlex: data.arms.right.flex,
+    leftFlex: data.arms.left.flex,
+    rightMuscle: data.arms.right.muscle,
+    leftMuscle: data.arms.left.muscle
   });
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
   const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false)
   const [chartParams, setChartParams] = useState({
-    bpmMin: 95,
-    bpmMax: 180,
-    armMin: 0,
-    armMax: 1024,
-    bpmLowThreshold: 0.7,
-    bpmMediumThreshold: 0.8,
-    bpmHighThreshold: 0.9,
+    bpmAttentionThreshold: 120,
+    bpmDangerThreshold: 150,
     armAttentionThreshold: 800,
     armDangerThreshold: 950,
-    updateInterval: 200,
+    updateInterval: 3000,
   })
 
   useEffect(() => {
@@ -111,39 +104,42 @@ const Data: React.FC = () => {
   // Simulated BPM data update
   useEffect(() => {
     const interval = setInterval(() => {
-      const newBpm = Math.floor(Math.random() * (chartParams.bpmMax - chartParams.bpmMin + 1)) + chartParams.bpmMin
+      const newBpm = Math.floor(Math.random() * (200 - 60 + 1)) + 60
       setBpm(newBpm)
       setBpmScale(1.15)
       setTimeout(() => setBpmScale(1), 500)
 
       const currentTime = new Date().toLocaleTimeString()
+      console.log(`Atualizando BPM: ${newBpm} em ${currentTime}`); // Debug log
 
       setBpmData((prevData) => [
         ...prevData.slice(-20),
         { time: currentTime, bpm: newBpm },
       ])
-    }, 1000)
+    }, chartParams.updateInterval)
 
     return () => clearInterval(interval)
-  }, [chartParams.bpmMin, chartParams.bpmMax])
+  }, [chartParams.updateInterval])
 
   // Simulated arm data update
   useEffect(() => {
     const interval = setInterval(() => {
-      const currentTime = new Date().toLocaleTimeString()
+      const currentTime = new Date().toLocaleTimeString();
       const newArmData = {
         time: currentTime,
-        rightFlex: Math.floor(Math.random() * (chartParams.armMax - chartParams.armMin)) + chartParams.armMin,
-        leftFlex: Math.floor(Math.random() * (chartParams.armMax - chartParams.armMin)) + chartParams.armMin,
-        rightMuscle: Math.floor(Math.random() * (chartParams.armMax - chartParams.armMin)) + chartParams.armMin,
-        leftMuscle: Math.floor(Math.random() * (chartParams.armMax - chartParams.armMin)) + chartParams.armMin,
+        rightFlex: Math.floor(Math.random() * 1025),
+        leftFlex: Math.floor(Math.random() * 1025),
+        rightMuscle: Math.floor(Math.random() * 1025),
+        leftMuscle: Math.floor(Math.random() * 1025),
       };
+
+      // Atualiza os dados do braço
       setArmData((prevData) => [...prevData.slice(-20), newArmData]);
       setLatestArmData(newArmData);
-    }, chartParams.updateInterval)
+    }, chartParams.updateInterval);
 
-    return () => clearInterval(interval)
-  }, [chartParams.armMin, chartParams.armMax, chartParams.updateInterval])
+    return () => clearInterval(interval);
+  }, [chartParams.armAttentionThreshold, chartParams.armDangerThreshold, chartParams.updateInterval]);
 
   const handleConfigSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -158,6 +154,36 @@ const Data: React.FC = () => {
     setIsSwitchUserModalOpen(false)
   }
 
+  // Função para determinar a cor do card BPM
+  const getBpmCardColor = () => {
+    const age = parseInt(localStorage.getItem('userAge') || '0');
+    const maxBpm = 220 - age;
+
+    // Verifica se o BPM está em perigo
+    if (bpm >= maxBpm || bpm >= chartParams.bpmDangerThreshold) {
+      const audio = new Audio('/mixkit-classic-short-alarm-993.wav'); 
+      audio.play().catch((error) => {
+        console.error("Erro ao tocar o áudio:", error);
+      });
+      return 'bg-red-700';
+    }
+    if (bpm >= chartParams.bpmAttentionThreshold) return 'bg-orange-400'; // Laranja
+    return 'bg-white';
+  };
+
+  // Função para determinar a cor dos cards de flexões e contrações
+  const getArmCardColor = (value: number) => {
+    if (value >= chartParams.armDangerThreshold) {
+      const audio = new Audio('/mixkit-classic-short-alarm-993.wav');
+      audio.play().catch((error) => {
+        console.error("Erro ao tocar o áudio:", error);
+      });
+      return 'bg-red-700'; 
+    }
+    if (value >= chartParams.armAttentionThreshold) return 'bg-orange-400'; 
+    return 'bg-white';
+  };
+
   return (
     <div
       className="min-h-screen flex flex-col bg-gradient-radial from-purple-800 to-black p-4 md:p-8 overflow-y-auto"
@@ -169,7 +195,7 @@ const Data: React.FC = () => {
       <Modal
         isOpen={isConfigModalOpen}
         onClose={() => setIsConfigModalOpen(false)}
-        title="Configurar parâmetros dos gráficos"
+        title="Configurar Parâmetros"
         actions={null /*
           <button
             type="submit"
@@ -185,7 +211,12 @@ const Data: React.FC = () => {
             {Object.entries(chartParams).map(([key, value]) => (
               <div key={key}>
                 <label htmlFor={key} className="block text-sm font-medium text-gray-700">
-                  {key.charAt(0).toUpperCase() + key.slice(1)}
+                  {key === 'bpmAttentionThreshold' ? 'Limite de Atenção BPM' :
+                   key === 'bpmDangerThreshold' ? 'Limite de Perigo BPM' :
+                   key === 'armAttentionThreshold' ? 'Limite de Atenção Braço' :
+                   key === 'armDangerThreshold' ? 'Limite de Perigo Braço' :
+                   key === 'updateInterval' ? 'Intervalo de Atualização (ms)' : 
+                   key.charAt(0).toUpperCase() + key.slice(1)}
                 </label>
                 <input
                   type="number"
@@ -198,9 +229,9 @@ const Data: React.FC = () => {
                     })
                   }
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                  step={key.includes('Threshold') ? '0.1' : key === 'updateInterval' ? '100' : '1'}
+                  step={key.includes('Threshold') ? '1' : key === 'updateInterval' ? '100' : '1'}
                   min={key === 'updateInterval' ? 100 : 0}
-                  max={key.includes('Threshold') ? '1' : undefined}
+                  max={key.includes('Threshold') ? '1000' : undefined}
                 />
               </div>
             ))}
@@ -279,7 +310,7 @@ const Data: React.FC = () => {
             <div className="lg:w-1/3">
               {/* Componente de BPM */}
               <motion.div
-                className="shadow-md rounded-lg p-4 text-center transition-transform transform hover:scale-105 w-full bg-white"
+                className={`shadow-md rounded-lg p-4 text-center transition-transform transform hover:scale-105 w-full ${getBpmCardColor()}`}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -299,7 +330,7 @@ const Data: React.FC = () => {
                     <LineChart data={bpmData} margin={{ top: 0, right: 10, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="time" />
-                      <YAxis domain={[chartParams.bpmMin, chartParams.bpmMax]} />
+                      <YAxis domain={[chartParams.bpmAttentionThreshold, chartParams.bpmDangerThreshold]} />
                       <Tooltip />
                       <Legend />
                       <Line type="monotone" dataKey="bpm" stroke="#8884d8" activeDot={{ r: 8 }} />
@@ -312,14 +343,14 @@ const Data: React.FC = () => {
             <div className="lg:w-1/3 w-full">
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { image: flexaoImage, title: 'Flexão Braço Direito', value: latestArmData.rightFlex, alt: 'Flexão do Braço Direito', color: '#8884d8' },
-                  { image: flexaoImage, title: 'Flexão Braço Esquerdo', value: latestArmData.leftFlex, alt: 'Flexão do Braço Esquerdo', mirror: true, color: '#82ca9d' },
-                  { image: contracaoImage, title: 'Contração Muscular Braço Direito', value: latestArmData.rightMuscle, alt: 'Contração Muscular do Braço Direito', mirror: true, color: '#ffc658' },
-                  { image: contracaoImage, title: 'Contração Muscular Braço Esquerdo', value: latestArmData.leftMuscle, alt: 'Contração Muscular do Braço Esquerdo', color: '#ff7300' },
+                  { image: flexaoImage, title: 'Flexão Braço Direito', value: latestArmData.rightFlex, alt: 'Flexão do Braço Direito', color: getArmCardColor(latestArmData.rightFlex) },
+                  { image: flexaoImage, title: 'Flexão Braço Esquerdo', value: latestArmData.leftFlex, alt: 'Flexão do Braço Esquerdo', color: getArmCardColor(latestArmData.leftFlex), mirror: true },
+                  { image: contracaoImage, title: 'Contração Muscular Braço Direito', value: latestArmData.rightMuscle, alt: 'Contração Muscular do Braço Direito', color: getArmCardColor(latestArmData.rightMuscle), mirror: true },
+                  { image: contracaoImage, title: 'Contração Muscular Braço Esquerdo', value: latestArmData.leftMuscle, alt: 'Contração Muscular do Braço Esquerdo', color: getArmCardColor(latestArmData.leftMuscle) },
                 ].map((card, index) => (
                   <motion.div
                     key={index}
-                    className="shadow-md rounded-lg p-4 text-center transition-transform transform hover:scale-105 bg-white"
+                    className={`shadow-md rounded-lg p-4 text-center transition-transform transform hover:scale-105 ${card.color}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -335,6 +366,8 @@ const Data: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            {/* adicione um texto explicativo para quando o card/gráfico ficar vermelho e/ou laranja */}
 
             <div className="lg:w-1/3 w-full">
               <motion.div
@@ -355,7 +388,7 @@ const Data: React.FC = () => {
                         >
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="time" />
-                          <YAxis domain={[chartParams.armMin, chartParams.armMax]} />
+                          <YAxis domain={[chartParams.armAttentionThreshold, chartParams.armDangerThreshold]} />
                           <Tooltip />
                           <Legend />
                           <Line type="monotone" dataKey="rightFlex" stroke="#8884d8" name="Flexão Direita" />
