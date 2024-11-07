@@ -1,29 +1,31 @@
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion'
 import { Settings, User } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import mqtt from 'mqtt';
 
-import contracaoImage from '../assets/contracao.png'
-import flexaoImage from '../assets/flexao.png'
-import heartImage from '../assets/frequencia-cardiaca.png'
-import data from '../sample.json'
+import contracaoImage from '../assets/contracao.png';
+import flexaoImage from '../assets/flexao.png';
+import heartImage from '../assets/frequencia-cardiaca.png';
 
 // Simplified Card components
 const Card: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
   <div className={`bg-white shadow-md rounded-lg ${className}`}>{children}</div>
-)
+);
 
 const CardHeader: React.FC<React.PropsWithChildren> = ({ children }) => (
   <div className="px-6 py-4 border-b border-gray-200">{children}</div>
-)
+);
 
-const CardTitle: React.FC<React.PropsWithChildren> = ({ children }) => (
-  <h2 className="text-xl font-semibold text-gray-800">{children}</h2>
-)
+const CardTitle: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
+  <h2 className={`text-xl font-semibold text-gray-800 ${className}`}>{children}</h2>
+);
 
 const CardContent: React.FC<React.PropsWithChildren> = ({ children }) => (
   <div className="p-6">{children}</div>
-)
+);
+
+
 
 // Custom Modal component
 const Modal: React.FC<{
@@ -39,120 +41,145 @@ const Modal: React.FC<{
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">{title}</h2>
-          <div className="flex space-x-2">{actions}</div>
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            &times;
+          </button>
         </div>
-        {children}
-        <button
-          onClick={onClose}
-          className="mt-4 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-        >
-          Fechar
-        </button>
+        <div>{children}</div>
+        {actions && <div className="mt-4">{actions}</div>}
       </div>
     </div>
   );
 };
 
 const Data: React.FC = () => {
-  const [userName, setUserName] = useState('')
-  const [userAge, setUserAge] = useState('')
-  const [isFormVisible, setIsFormVisible] = useState(true)
-  const [bpm, setBpm] = useState(data.heart.bpm)
-  const [bpmScale, setBpmScale] = useState(1)
-  const [bpmData, setBpmData] = useState<{ time: string; bpm: number }[]>([])
+  const [userName, setUserName] = useState('');
+  const [userAge, setUserAge] = useState('');
+  const [isFormVisible, setIsFormVisible] = useState(true);
+  const [bpm, setBpm] = useState(0);
+  const [bpmScale, setBpmScale] = useState(1);
+  const [bpmData, setBpmData] = useState<{ time: string; bpm: number }[]>([]);
   const [armData, setArmData] = useState<{
     time: string;
     rightFlex: number;
     leftFlex: number;
     rightMuscle: number;
     leftMuscle: number;
-  }[]>([])
+  }[]>([]);
   const [latestArmData, setLatestArmData] = useState({
-    rightFlex: data.arms.right.flex,
-    leftFlex: data.arms.left.flex,
-    rightMuscle: data.arms.right.muscle,
-    leftMuscle: data.arms.left.muscle
+    rightFlex: 0,
+    leftFlex: 0,
+    rightMuscle: 0,
+    leftMuscle: 0,
   });
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
-  const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false)
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
   const [chartParams, setChartParams] = useState({
     bpmAttentionThreshold: 120,
     bpmDangerThreshold: 150,
     armAttentionThreshold: 800,
     armDangerThreshold: 950,
     updateInterval: 3000,
-  })
+  });
 
   useEffect(() => {
-    const storedName = localStorage.getItem('userName')
-    const storedAge = localStorage.getItem('userAge')
+    const storedName = localStorage.getItem('userName');
+    const storedAge = localStorage.getItem('userAge');
     if (storedName && storedAge) {
-      setUserName(storedName)
-      setUserAge(storedAge)
-      setIsFormVisible(false)
+      setUserName(storedName);
+      setUserAge(storedAge);
+      setIsFormVisible(false);
     }
-  }, [])
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    localStorage.setItem('userName', userName)
-    localStorage.setItem('userAge', userAge)
-    setIsFormVisible(false)
-  }
+    e.preventDefault();
+    localStorage.setItem('userName', userName);
+    localStorage.setItem('userAge', userAge);
+    setIsFormVisible(false);
+  };
 
-  // Simulated BPM data update
+  // MQTT connection setup
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newBpm = Math.floor(Math.random() * (200 - 60 + 1)) + 60
-      setBpm(newBpm)
-      setBpmScale(1.15)
-      setTimeout(() => setBpmScale(1), 500)
+    const client = mqtt.connect('ws://broker.hivemq.com:8000/mqtt');
 
-      const currentTime = new Date().toLocaleTimeString()
-      console.log(`Atualizando BPM: ${newBpm} em ${currentTime}`); // Debug log
+    client.on('connect', () => {
+      console.log('Conectado ao broker MQTT');
+      client.subscribe('sensores/AD8232');
+      client.subscribe('sensores/braco_direito');
+      client.subscribe('sensores/biceps1');
+      client.subscribe('sensores/braco_esquerdo');
+      client.subscribe('sensores/biceps2');
+    });
 
-      setBpmData((prevData) => [
-        ...prevData.slice(-20),
-        { time: currentTime, bpm: newBpm },
-      ])
-    }, chartParams.updateInterval)
-
-    return () => clearInterval(interval)
-  }, [chartParams.updateInterval])
-
-  // Simulated arm data update
-  useEffect(() => {
-    const interval = setInterval(() => {
+    client.on('message', (topic, message) => {
       const currentTime = new Date().toLocaleTimeString();
-      const newArmData = {
-        time: currentTime,
-        rightFlex: Math.floor(Math.random() * 1025),
-        leftFlex: Math.floor(Math.random() * 1025),
-        rightMuscle: Math.floor(Math.random() * 1025),
-        leftMuscle: Math.floor(Math.random() * 1025),
-      };
 
-      // Atualiza os dados do braço
-      setArmData((prevData) => [...prevData.slice(-20), newArmData]);
-      setLatestArmData(newArmData);
-    }, chartParams.updateInterval);
+      if (topic === 'sensores/AD8232') {
+        const newBpm = parseInt(message.toString(), 10);
+        setBpm(newBpm);
+        setBpmScale(1.15);
+        setTimeout(() => setBpmScale(1), 500);
 
-    return () => clearInterval(interval);
-  }, [chartParams.armAttentionThreshold, chartParams.armDangerThreshold, chartParams.updateInterval]);
+        setBpmData((prevData) => [
+          ...prevData.slice(-20),
+          { time: currentTime, bpm: newBpm },
+        ]);
+      } else {
+        try {
+          const value = parseInt(message.toString(), 10);
+
+          setArmData((prevData) => {
+            const lastEntry = prevData.length > 0 ? prevData[prevData.length - 1] : {
+              time: currentTime,
+              rightFlex: 0,
+              leftFlex: 0,
+              rightMuscle: 0,
+              leftMuscle: 0
+            };
+
+            const newEntry = {
+              time: currentTime,
+              rightFlex: topic === 'sensores/braco_direito' ? value : lastEntry.rightFlex,
+              leftFlex: topic === 'sensores/braco_esquerdo' ? value : lastEntry.leftFlex,
+              rightMuscle: topic === 'sensores/biceps1' ? value : lastEntry.rightMuscle,
+              leftMuscle: topic === 'sensores/biceps2' ? value : lastEntry.leftMuscle
+            };
+
+            return [...prevData.slice(-19), newEntry];
+          });
+
+          setLatestArmData((prevData) => ({
+            ...prevData,
+            rightFlex: topic === 'sensores/braco_direito' ? value : prevData.rightFlex,
+            leftFlex: topic === 'sensores/braco_esquerdo' ? value : prevData.leftFlex,
+            rightMuscle: topic === 'sensores/biceps1' ? value : prevData.rightMuscle,
+            leftMuscle: topic === 'sensores/biceps2' ? value : prevData.leftMuscle,
+          }));
+        } catch (error) {
+          console.error('Error parsing MQTT message:', error);
+        }
+      }
+    });
+
+    return () => {
+      client.end();
+    };
+  }, []);
 
   const handleConfigSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsConfigModalOpen(false)
-  }
+    e.preventDefault();
+    setIsConfigModalOpen(false);
+  };
 
   const handleSwitchUser = () => {
-    localStorage.clear()
-    setUserName('')
-    setUserAge('')
-    setIsFormVisible(true)
-    setIsSwitchUserModalOpen(false)
-  }
+    localStorage.clear();
+    setUserName('');
+    setUserAge('');
+    setIsFormVisible(true);
+    setIsSwitchUserModalOpen(false);
+  };
 
   // Função para determinar a cor do card BPM
   const getBpmCardColor = () => {
@@ -161,9 +188,9 @@ const Data: React.FC = () => {
 
     // Verifica se o BPM está em perigo
     if (bpm >= maxBpm || bpm >= chartParams.bpmDangerThreshold) {
-      const audio = new Audio('/mixkit-classic-short-alarm-993.wav'); 
+      const audio = new Audio('/mixkit-classic-short-alarm-993.wav');
       audio.play().catch((error) => {
-        console.error("Erro ao tocar o áudio:", error);
+        console.error('Erro ao reproduzir o áudio:', error);
       });
       return 'bg-red-700';
     }
@@ -176,11 +203,13 @@ const Data: React.FC = () => {
     if (value >= chartParams.armDangerThreshold) {
       const audio = new Audio('/mixkit-classic-short-alarm-993.wav');
       audio.play().catch((error) => {
-        console.error("Erro ao tocar o áudio:", error);
+        console.error('Erro ao reproduzir o áudio:', error);
       });
-      return 'bg-red-700'; 
+      return 'bg-red-700';
     }
-    if (value >= chartParams.armAttentionThreshold) return 'bg-orange-400'; 
+    if (value >= chartParams.armAttentionThreshold) {
+      return 'bg-orange-400';
+    }
     return 'bg-white';
   };
 
@@ -212,11 +241,11 @@ const Data: React.FC = () => {
               <div key={key}>
                 <label htmlFor={key} className="block text-sm font-medium text-gray-700">
                   {key === 'bpmAttentionThreshold' ? 'Limite de Atenção BPM' :
-                   key === 'bpmDangerThreshold' ? 'Limite de Perigo BPM' :
-                   key === 'armAttentionThreshold' ? 'Limite de Atenção Braço' :
-                   key === 'armDangerThreshold' ? 'Limite de Perigo Braço' :
-                   key === 'updateInterval' ? 'Intervalo de Atualização (ms)' : 
-                   key.charAt(0).toUpperCase() + key.slice(1)}
+                    key === 'bpmDangerThreshold' ? 'Limite de Perigo BPM' :
+                      key === 'armAttentionThreshold' ? 'Limite de Atenção Braço' :
+                        key === 'armDangerThreshold' ? 'Limite de Perigo Braço' :
+                          key === 'updateInterval' ? 'Intervalo de Atualização (ms)' :
+                            key.charAt(0).toUpperCase() + key.slice(1)}
                 </label>
                 <input
                   type="number"
@@ -320,11 +349,10 @@ const Data: React.FC = () => {
                   alt="Frequência Cardíaca"
                   className="w-12 h-12 sm:w-16 sm:h-16 mb-4 mx-auto"
                 />
-                <p className="font-bold">BPM</p>
+                <p className="font-bold">Frquência Cardíaca</p>
                 <motion.p className="text-2xl" animate={{ scale: bpmScale }} transition={{ duration: 0.5 }}>
                   {bpm}
                 </motion.p>
-                <p className="text-sm text-gray-600">Signal Strength: {data.heart.sig}</p>
                 <div className="h-60">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={bpmData} margin={{ top: 0, right: 10, left: 0, bottom: 5 }}>
@@ -339,7 +367,6 @@ const Data: React.FC = () => {
                 </div>
               </motion.div>
             </div>
-
             <div className="lg:w-1/3 w-full">
               <div className="grid grid-cols-2 gap-4">
                 {[
@@ -377,24 +404,55 @@ const Data: React.FC = () => {
               >
                 <Card className="w-full">
                   <CardHeader>
-                    <CardTitle>Dados dos Braços ao Longo do Tempo</CardTitle>
+                    <CardTitle className="text-center">Dados dos Braços ao Longo do Tempo</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart
                           data={armData}
-                          margin={{ top: 0, right: 10, left: 0, bottom: 5 }}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="time" />
-                          <YAxis domain={[chartParams.armAttentionThreshold, chartParams.armDangerThreshold]} />
+                          <XAxis
+                            dataKey="time"
+                            tick={{ fontSize: 12 }}
+                            interval="preserveEnd"
+                          />
+                          <YAxis
+                            domain={[0, 'auto']}
+                            tick={{ fontSize: 12 }}
+                          />
                           <Tooltip />
                           <Legend />
-                          <Line type="monotone" dataKey="rightFlex" stroke="#8884d8" name="Flexão Direita" />
-                          <Line type="monotone" dataKey="leftFlex" stroke="#82ca9d" name="Flexão Esquerda" />
-                          <Line type="monotone" dataKey="rightMuscle" stroke="#ffc658" name="Contração Direita" />
-                          <Line type="monotone" dataKey="leftMuscle" stroke="#ff7300" name="Contração Esquerda" />
+                          <Line
+                            type="monotone"
+                            dataKey="rightFlex"
+                            stroke="#8884d8"
+                            name="Flexão Direita"
+                            isAnimationActive={false}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="leftFlex"
+                            stroke="#82ca9d"
+                            name="Flexão Esquerda"
+                            isAnimationActive={false}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="rightMuscle"
+                            stroke="#ffc658"
+                            name="Contração Direita"
+                            isAnimationActive={false}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="leftMuscle"
+                            stroke="#ff7300"
+                            name="Contração Esquerda"
+                            isAnimationActive={false}
+                          />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>

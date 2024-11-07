@@ -54,7 +54,7 @@ const Modal: React.FC<{
   );
 };
 
-const Data: React.FC = () => {
+const Data2: React.FC = () => {
   const [userName, setUserName] = useState('')
   const [userAge, setUserAge] = useState('')
   const [isFormVisible, setIsFormVisible] = useState(true)
@@ -409,4 +409,4 @@ const Data: React.FC = () => {
   )
 }
 
-export default Data
+export default Data2
