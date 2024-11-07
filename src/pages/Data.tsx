@@ -102,7 +102,7 @@ const Data: React.FC = () => {
 
   // MQTT connection setup
   useEffect(() => {
-    const client = mqtt.connect('ws://broker.hivemq.com:8000/mqtt');
+    const client = mqtt.connect('wss://broker.hivemq.com:8000/mqtt');
 
     client.on('connect', () => {
       console.log('Conectado ao broker MQTT');
