@@ -102,7 +102,7 @@ const Data: React.FC = () => {
 
   // MQTT connection setup
   useEffect(() => {
-    const client = mqtt.connect('wss://broker.hivemq.com:8000/mqtt');
+    const client = mqtt.connect('wss://mqtt-dashboard.com:8884/mqtt');
 
     client.on('connect', () => {
       console.log('Conectado ao broker MQTT');
@@ -161,6 +161,10 @@ const Data: React.FC = () => {
           console.error('Error parsing MQTT message:', error);
         }
       }
+    });
+
+    client.on('error', (error) => {
+      console.error('Erro de conexão:', error);
     });
 
     return () => {
