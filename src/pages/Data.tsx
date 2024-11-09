@@ -76,10 +76,10 @@ const Data: React.FC = () => {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
   const [chartParams, setChartParams] = useState({
-    bpmAttentionThreshold: 120,
-    bpmDangerThreshold: 150,
-    armAttentionThreshold: 800,
-    armDangerThreshold: 950,
+    bpmAttentionThreshold: 15000,
+    bpmDangerThreshold: 17000,
+    armAttentionThreshold: 28000,
+    armDangerThreshold: 29000,
     updateInterval: 3000,
   });
 
@@ -187,16 +187,15 @@ const Data: React.FC = () => {
 
   // Função para determinar a cor do card BPM
   const getBpmCardColor = () => {
-    const age = parseInt(localStorage.getItem('userAge') || '0');
-    const maxBpm = 220 - age;
+    console.log('BPM:', bpm, 'Danger Threshold:', chartParams.bpmDangerThreshold);
 
     // Verifica se o BPM está em perigo
-    if (bpm >= maxBpm || bpm >= chartParams.bpmDangerThreshold) {
-      const audio = new Audio('/mixkit-classic-short-alarm-993.wav');
-      audio.play().catch((error) => {
-        console.error('Erro ao reproduzir o áudio:', error);
-      });
-      return 'bg-red-700';
+    if (bpm >= chartParams.bpmDangerThreshold) {
+        const audio = new Audio('/mixkit-classic-short-alarm-993.wav');
+        audio.play().catch((error) => {
+            console.error('Erro ao reproduzir o áudio:', error);
+        });
+        return 'bg-red-700';
     }
     if (bpm >= chartParams.bpmAttentionThreshold) return 'bg-orange-400'; // Laranja
     return 'bg-white';
